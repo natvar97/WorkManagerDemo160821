@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.work.*
 import com.anggrayudi.storage.SimpleStorage
 import com.anggrayudi.storage.SimpleStorageHelper
 import com.hbisoft.pickit.PickiT
@@ -26,6 +27,7 @@ import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import com.karumi.dexter.listener.single.PermissionListener
+import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener, PickiTCallbacks {
@@ -66,7 +68,31 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, PickiTCallbacks 
             }
         }
 
+        startWork()
+
     }
+
+    // notification manager
+    private fun startWork() {
+        WorkManager.getInstance(this@MainActivity)
+            .enqueueUniquePeriodicWork(
+                "WorkManagerDemo Work",
+                ExistingPeriodicWorkPolicy.KEEP,
+                createWorkRequest()
+            )
+    }
+
+    private fun createWorkRequest() =
+        PeriodicWorkRequest.Builder(NotificationWorker::class.java, 1, TimeUnit.MINUTES)
+            .setConstraints(createConstraints())
+            .build()
+
+
+    private fun createConstraints() = Constraints.Builder()
+        .setRequiresCharging(false)
+        .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+        .setRequiresBatteryNotLow(true)
+        .build()
 
     private fun requestCameraPermission() {
         Dexter.withContext(this@MainActivity)
@@ -198,7 +224,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, PickiTCallbacks 
 //            Log.d("uri", "uri: " + uri.toString())
 //
 //            startActivityForResult(intent, PDF_FOLDER)
-        }
+    }
 
 
     private fun openGallery() {
@@ -237,7 +263,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, PickiTCallbacks 
 //            isFolder = false
 //        }
 //        else {
-            pdfFilePath = path!!
+        pdfFilePath = path!!
 //        }
     }
 
